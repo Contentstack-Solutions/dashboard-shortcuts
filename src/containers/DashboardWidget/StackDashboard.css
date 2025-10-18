@@ -1,0 +1,20 @@
+/* Override any inherited height styles for Dashboard Widget */
+html, body {
+  margin: 0 !important;
+  padding: 0 !important;
+  height: auto !important;
+  min-height: 0 !important;
+}
+
+#root {
+  margin: 0 !important;
+  padding: 0 !important;
+  height: auto !important;
+  min-height: 0 !important;
+}
+
+/* Remove default link styling */
+a.no-underline {
+  text-decoration: none;
+  color: inherit;
+}
