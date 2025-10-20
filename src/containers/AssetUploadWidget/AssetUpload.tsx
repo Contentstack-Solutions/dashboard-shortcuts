@@ -161,6 +161,89 @@ const AssetUploadExtension = () => {
     setDragOverFolder(null);
   };
 
+  const handleContainerDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    // Highlight the current folder area as drop zone
+    setDragOverFolder('container');
+  };
+
+  const handleContainerDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragOverFolder(null);
+  };
+
+  const handleContainerDrop = async (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragOverFolder(null);
+    
+    const files = Array.from(e.dataTransfer.files);
+    if (files.length === 0) return;
+    
+    setUploading(true);
+    
+    try {
+      for (const file of files) {
+        // Create FormData for the upload
+        const uploadData: any = {
+          asset: {
+            upload: file,
+            parent_uid: currentFolderUid,
+            title: file.name
+          }
+        };
+        
+        // Upload using Management SDK - proper method
+        try {
+          await stack.asset().create(uploadData);
+        } catch (uploadErr) {
+          console.error('Upload error for file:', file.name, uploadErr);
+          // Try alternative method
+          const formData = new FormData();
+          formData.append('asset[upload]', file);
+          if (currentFolderUid) {
+            formData.append('asset[parent_uid]', currentFolderUid);
+          }
+          formData.append('asset[title]', file.name);
+          
+          // Direct API call as fallback
+          const apiKey = import.meta.env.VITE_CONTENTSTACK_API_KEY;
+          const managementToken = import.meta.env.VITE_CONTENTSTACK_MANAGEMENT_TOKEN;
+          
+          const response = await fetch(`https://api.contentstack.io/v3/assets`, {
+            method: 'POST',
+            headers: {
+              'api_key': apiKey,
+              'authorization': managementToken,
+            },
+            body: formData
+          });
+          
+          if (!response.ok) {
+            throw new Error(`Upload failed: ${response.statusText}`);
+          }
+        }
+      }
+      
+      // Show success message
+      const fileNames = files.map(f => f.name).join(', ');
+      const folderName = breadcrumbs[breadcrumbs.length - 1].name;
+      setUploadSuccess(`Uploaded ${files.length} file(s) to "${folderName}": ${fileNames}`);
+      setTimeout(() => setUploadSuccess(null), 5000);
+      
+      // Refresh the current view
+      await fetchFolders(currentFolderUid);
+    } catch (err) {
+      console.error('Error uploading files:', err);
+      setError(`Failed to upload files: ${err}`);
+      setTimeout(() => setError(null), 5000);
+    } finally {
+      setUploading(false);
+    }
+  };
+
   const handleDrop = async (e: React.DragEvent, targetFolder: AssetItem) => {
     e.preventDefault();
     e.stopPropagation();
@@ -314,11 +397,20 @@ const AssetUploadExtension = () => {
         </div>
       </div>
 
-      <div className="grid grid-cols-8 gap-4 p-5">
+      <div 
+        className={`grid grid-cols-8 gap-4 p-5 min-h-[300px] content-start transition-colors ${
+          dragOverFolder === 'container' ? 'bg-blue-50 border-2 border-blue-500 border-dashed rounded-lg' : ''
+        }`}
+        onDragOver={handleContainerDragOver}
+        onDragLeave={handleContainerDragLeave}
+        onDrop={handleContainerDrop}
+      >
         {/* Assets and Folders */}
         {items.length === 0 && !loading && (
           <div className="col-span-8 p-5 text-center text-gray-500">
-            No items in this directory
+            {dragOverFolder === 'container' 
+              ? 'Drop files here to upload' 
+              : 'No items in this directory'}
           </div>
         )}
         {items.map((item) => {
