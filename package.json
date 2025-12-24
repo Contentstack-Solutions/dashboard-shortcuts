@@ -64,7 +64,7 @@
   },
   "devDependencies": {
     "@cucumber/cucumber": "^11.3.0",
-    "@playwright/test": "^1.23.1",
+    "@playwright/test": "^1.56.1",
     "@tailwindcss/postcss": "^4.1.14",
     "@testing-library/jest-dom": "^5.16.4",
     "@testing-library/react": "^13.4.0",
@@ -77,7 +77,7 @@
     "dotenv": "^16.4.7",
     "eslint": "^8.56.0",
     "eslint-plugin-react": "^7.33.2",
-    "playwright": "^1.23.1",
+    "playwright": "^1.56.1",
     "postcss": "^8.5.6",
     "prettier": "^2.7.1",
     "tailwindcss": "^4.1.14",
